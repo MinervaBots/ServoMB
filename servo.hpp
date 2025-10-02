@@ -21,10 +21,12 @@ Cabeçalho responsável pelo controle do servo motor.
 #define PORCENTAGEM_MEDIA_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR  0.0725 // Servo motor na posição 90°
 #define PORCENTAGEM_MAXIMA_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR 0.12   // Servo motor na posição 180°
 
+constexpr unsigned short int VALOR_MAXIMO_RESOLUCAO_PWM_SERVO = (1 << RESOLUCAO_DO_SINAL_PWM_DO_SERVO_MOTOR) - 1;
+
 // Constantes com os valores do ciclo de trabalho do sinal PWM
-constexpr int VALOR_MINIMO_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR = (int)((pow(2, RESOLUCAO_DO_SINAL_PWM_DO_SERVO_MOTOR) - 1) * PORCENTAGEM_MINIMA_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR);
-constexpr int VALOR_MEDIO_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR  = (int)((pow(2, RESOLUCAO_DO_SINAL_PWM_DO_SERVO_MOTOR) - 1) * PORCENTAGEM_MEDIA_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR);
-constexpr int VALOR_MAXIMO_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR = (int)((pow(2, RESOLUCAO_DO_SINAL_PWM_DO_SERVO_MOTOR) - 1) * PORCENTAGEM_MAXIMA_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR);
+constexpr unsigned short int VALOR_MINIMO_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR = (unsigned short int)(VALOR_MAXIMO_RESOLUCAO_PWM_SERVO * PORCENTAGEM_MINIMA_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR);
+constexpr unsigned short int VALOR_MEDIO_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR  = (unsigned short int)(VALOR_MAXIMO_RESOLUCAO_PWM_SERVO * PORCENTAGEM_MEDIA_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR);
+constexpr unsigned short int VALOR_MAXIMO_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR = (unsigned short int)(VALOR_MAXIMO_RESOLUCAO_PWM_SERVO * PORCENTAGEM_MAXIMA_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR);
 
 // Classe para controlar servo motores
 class Servo {
@@ -73,7 +75,7 @@ class Servo {
         
         E escreve no canal o valor remapeado
         */
-        constrain(posicao, 0, 180);
+        posicao = constrain(posicao, 0, 180);
 
         int posicaoRemapeada = map(
             posicao,
