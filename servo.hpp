@@ -47,7 +47,7 @@ class Servo {
      * @param pino Número do pino de sinal do servo motor;
      * @param canal Canal de PWM do pino de sinal do servo motor.
      */
-    Servo(int pino, int canal):
+    Servo(int pino, int canal) :
         // Atribui os valores passados nos atributos
         _canal(canal)
     {
@@ -75,8 +75,11 @@ class Servo {
         
         E escreve no canal o valor remapeado
         */
-        posicao = constrain(posicao, 0, 180);
 
+        // Atualiza o atributo da posição do servo motor com o valor da posição atual e limita o valor da posição no intervalo [0, 180]
+        _posicao = constrain(posicao, 0, 180);
+
+        // Remapeia o valor da posição do servo motor para o intervalo do ciclo de trabalho do sinal PWM
         int posicaoRemapeada = map(
             posicao,
             0,
@@ -87,9 +90,6 @@ class Servo {
 
         // Escreve no canal o valor remapeado
         ledcWrite(_canal, posicaoRemapeada);
-
-        // Atualiza o atributo da posição do servo motor com o valor da posição atual
-        _posicao = posicao;
     }
 
     /**
@@ -97,7 +97,7 @@ class Servo {
      * 
      * @return O valor da posição atual do servo motor.
      */
-    int getPosicao() {
+    int getPosicao() const {
         return _posicao;
     }
 };
