@@ -29,7 +29,7 @@ constexpr unsigned short int VALOR_MEDIO_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR  = 
 constexpr unsigned short int VALOR_MAXIMO_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR = (unsigned short int)(VALOR_MAXIMO_RESOLUCAO_PWM_SERVO * PORCENTAGEM_MAXIMA_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR);
 
 // Classe para controlar servo motores
-class Servo {
+class ServoMB {
     private:
 
     // Atributo que armazena o canal utilizado pelo pino de sinal do servo motor
