@@ -6,27 +6,29 @@ Cabeçalho responsável pelo controle do servo motor.
 
 #include <Arduino.h>
 
-// Definição do valor da frequência do sinal PWM do servo motor
-constexpr uint32_t FREQUENCIA_DO_SINAL_PWM_DO_SERVO_MOTOR = 50;
+namespace ServoMBConstants {
+    // Definição do valor da frequência do sinal PWM do servo motor
+    constexpr uint32_t FREQUENCIA_DO_SINAL_PWM_DO_SERVO_MOTOR = 50;
 
-// Definição da resolução do sinal PWM
-constexpr uint8_t RESOLUCAO_DO_SINAL_PWM_DO_SERVO_MOTOR = 15;
+    // Definição da resolução do sinal PWM
+    constexpr uint8_t RESOLUCAO_DO_SINAL_PWM_DO_SERVO_MOTOR = 15;
 
-// Definição das porcentagens do ciclo de trabalho do sinal PWM
-// Período do sinal PWM: 20000us
-// Valor mínimo do ciclo de trabalho: 500us
-// Valor médio do ciclo de trabalho: 1450us
-// Valor máximo do ciclo de trabalho: 2400us
-constexpr float PORCENTAGEM_MINIMA_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR = 0.025f;  // Servo motor na posição 0°
-constexpr float PORCENTAGEM_MEDIA_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR  = 0.0725f; // Servo motor na posição 90°
-constexpr float PORCENTAGEM_MAXIMA_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR = 0.12f;   // Servo motor na posição 180°
+    // Definição das porcentagens do ciclo de trabalho do sinal PWM
+    // Período do sinal PWM: 20000us
+    // Valor mínimo do ciclo de trabalho: 500us
+    // Valor médio do ciclo de trabalho: 1450us
+    // Valor máximo do ciclo de trabalho: 2400us
+    constexpr float PORCENTAGEM_MINIMA_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR = 0.025f;  // Servo motor na posição 0°
+    constexpr float PORCENTAGEM_MEDIA_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR  = 0.0725f; // Servo motor na posição 90°
+    constexpr float PORCENTAGEM_MAXIMA_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR = 0.12f;   // Servo motor na posição 180°
 
-constexpr unsigned int VALOR_MAXIMO_RESOLUCAO_PWM_SERVO = (1 << RESOLUCAO_DO_SINAL_PWM_DO_SERVO_MOTOR) - 1;
+    constexpr unsigned int VALOR_MAXIMO_RESOLUCAO_PWM_SERVO = (1 << RESOLUCAO_DO_SINAL_PWM_DO_SERVO_MOTOR) - 1;
 
-// Constantes com os valores do ciclo de trabalho do sinal PWM
-constexpr unsigned short int VALOR_MINIMO_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR = (unsigned short int)(VALOR_MAXIMO_RESOLUCAO_PWM_SERVO * PORCENTAGEM_MINIMA_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR);
-constexpr unsigned short int VALOR_MEDIO_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR  = (unsigned short int)(VALOR_MAXIMO_RESOLUCAO_PWM_SERVO * PORCENTAGEM_MEDIA_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR);
-constexpr unsigned short int VALOR_MAXIMO_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR = (unsigned short int)(VALOR_MAXIMO_RESOLUCAO_PWM_SERVO * PORCENTAGEM_MAXIMA_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR);
+    // Constantes com os valores do ciclo de trabalho do sinal PWM
+    constexpr unsigned short int VALOR_MINIMO_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR = (unsigned short int)(VALOR_MAXIMO_RESOLUCAO_PWM_SERVO * PORCENTAGEM_MINIMA_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR);
+    constexpr unsigned short int VALOR_MEDIO_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR  = (unsigned short int)(VALOR_MAXIMO_RESOLUCAO_PWM_SERVO * PORCENTAGEM_MEDIA_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR);
+    constexpr unsigned short int VALOR_MAXIMO_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR = (unsigned short int)(VALOR_MAXIMO_RESOLUCAO_PWM_SERVO * PORCENTAGEM_MAXIMA_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR);
+}
 
 // Classe para controlar servo motores
 class ServoMB {
@@ -52,7 +54,7 @@ class ServoMB {
         _canal(canal)
     {
         // Configura o canal que gera o sinal PWM
-        ledcSetup(_canal, FREQUENCIA_DO_SINAL_PWM_DO_SERVO_MOTOR, RESOLUCAO_DO_SINAL_PWM_DO_SERVO_MOTOR);
+        ledcSetup(_canal, ServoMBConstants::FREQUENCIA_DO_SINAL_PWM_DO_SERVO_MOTOR, ServoMBConstants::RESOLUCAO_DO_SINAL_PWM_DO_SERVO_MOTOR);
 
         // Anexa o canal que gera o sinal PWM no pino de sinal do servo motor
         ledcAttachPin(pino, _canal);
@@ -84,8 +86,8 @@ class ServoMB {
             posicao,
             0,
             180,
-            VALOR_MINIMO_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR,
-            VALOR_MAXIMO_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR
+            ServoMBConstants::VALOR_MINIMO_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR,
+            ServoMBConstants::VALOR_MAXIMO_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR
         );
 
         // Escreve no canal o valor remapeado
