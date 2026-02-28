@@ -15,6 +15,7 @@ Ao invés de depender de rotinas de software ou bibliotecas genéricas do Arduin
 
 ## ✨ Principais Características
 
+* **Otimização:** Desenvolvida com uma otimização máxima para gastar a menor quantidade de memória possível no microcontrolador.
 * **PWM via Hardware Puro:** Controle de posição fluido usando a API nativa da Espressif.
 * **Lazy Initialization (Segurança para RTOS):** A inicialização do hardware ocorre dinamicamente no momento exato do uso, prevenindo *Kernel Panics* causados pela chamada de construtores globais antes da subida do FreeRTOS.
 * **Proteção contra Falhas:** Validação de pinos e canais para evitar lixo de memória ou travamentos do microcontrolador.
