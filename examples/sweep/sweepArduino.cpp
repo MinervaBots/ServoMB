@@ -1,3 +1,5 @@
+
+#include <Arduino.h>
 #include <ServoMB.h>
 
 constexpr uint8_t PINO_SERVO = 18;
@@ -7,7 +9,7 @@ ServoMB servo(PINO_SERVO, CANAL_SERVO);
 
 void setup() {}
 
-void loop {
+void loop() {
     for (uint8_t posicao = 0; posicao <= 180; posicao++) {
         servo.setPosicao(posicao);
         delay(15);
