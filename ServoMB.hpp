@@ -4,7 +4,8 @@ Cabeçalho responsável pelo controle do servo motor.
 
 #pragma once
 
-#include <Arduino.h>
+#include "driver/ledc.h"
+#include "esp_log.h"
 
 namespace ServoMBConstants {
     // Definição do valor da frequência do sinal PWM do servo motor
@@ -32,32 +33,121 @@ namespace ServoMBConstants {
 
 // Classe para controlar servo motores
 class ServoMB {
-    private:
-
+private:
     // Atributo que armazena o canal utilizado pelo pino de sinal do servo motor
     // Esse canal é responsável por gerar o sinal PWM
-    uint8_t _canal;
+    ledc_channel_t _canal;
+    uint8_t _pino;
+
+    // Armazenará qual tipo de velocidade de canal será usada
+    ledc_mode_t canalVelocidade;
 
     // Atributo que armazena o valor da posição atual do servo motor
     uint8_t _posicao = 0;
 
-    public:
+    // Variável para controlar a inicialização
+    // Garante com que a parte do hardware seja configurada somente após a inicialização do sistema operacional do ESP32
+    bool hardwareIniciado = false;
+    bool configurado = false;
     
+    /**
+     * @brief Método para configurar o canal e o pino do servo motor, além de verificar se os valores passados são válidos.
+     * 
+     * @param pino Número do pino de sinal do servo motor;
+     * @param canal Canal de PWM do pino de sinal do servo motor.
+     * 
+     * @return true se a configuração for feita com sucesso, ou false caso haja algum erro na configuração.
+     */
+    bool setConfig(uint8_t pino, uint8_t canal) {
+        if (pino > 100) {
+            ESP_LOGE("ServoMB", "Pino invalido, o valor passado é muito alto (%d).", pino);
+            return false;
+        }
+
+        // Macro de verificação do hardware para suporte do HIGH SPEED
+        #ifdef SOC_LEDC_SUPPORT_HS_MODE
+
+            if (canal >= 0 && canal <= 7) {
+                this->_canal = static_cast<ledc_channel_t>(canal);
+                this->canalVelocidade = LEDC_LOW_SPEED_MODE;
+            }
+
+            else if (canal > 7 && canal <= 15) {
+                // Transforma os canais de 8 a 15 em valores de 0 a 7 para a função de inicialização
+                this->_canal = static_cast<ledc_channel_t>(canal - 8);
+                // Os canais de 8 a 15 são do hardware HIGH SPEED
+                this->canalVelocidade = LEDC_HIGH_SPEED_MODE;
+            }
+
+            else {
+                ESP_LOGE("ServoMB", "Canal %d invalido para esse chip. Use de 0 a 15.", canal);
+                return false;
+            }
+
+        #else
+
+            if (canal <= 7) {
+                this->_canal = static_cast<ledc_channel_t>(canal);
+                this->canalVelocidade = LEDC_LOW_SPEED_MODE;
+            } 
+            
+            else {
+                ESP_LOGE("ServoMB", "Canal %d invalido para esse chip. Use de 0 a 7.", canal);
+                return false;
+            }
+
+        #endif
+
+        this->_pino = pino;
+        configurado = true;
+        
+        return true;
+    }
+
+    /**
+     * @brief Método para configurar o canal e o timer do ESP32 para o controle do servo motor.
+     */
+    void initCanal() {
+        if (!configurado || hardwareIniciado) { return; }
+
+        ledc_timer_config_t ledc_timer = {
+            .speed_mode = canalVelocidade, // Escolhe o modo de velocidade de acordo com o canal de entrada na classe
+            .duty_resolution = static_cast<ledc_timer_bit_t>(ServoMBConstants::RESOLUCAO_DO_SINAL_PWM_DO_SERVO_MOTOR),
+            .timer_num = LEDC_TIMER_0,
+            .freq_hz = ServoMBConstants::FREQUENCIA_DO_SINAL_PWM_DO_SERVO_MOTOR,
+            .clk_cfg = LEDC_AUTO_CLK
+        };
+
+        ledc_channel_config_t ledc_channel = {
+            .gpio_num = _pino, // Pino de saída
+            .speed_mode = canalVelocidade, // Escolhe o modo de velocidade de acordo com o canal de entrada na classe
+            .channel = _canal, // Canal já remapeado
+            .intr_type = LEDC_INTR_DISABLE, // desativa as interrupções
+            .timer_sel = LEDC_TIMER_0, // Timer já configurado
+            .duty = 0, // Começa com o duty cicle em 0
+            .hpoint = 0
+        };
+
+        ledc_timer_config(&ledc_timer);
+        ledc_channel_config(&ledc_channel);
+
+        hardwareIniciado = true;
+    }
+
+public:
+
     /**
      * @brief Método construtor que configura o servo motor.
      * 
      * @param pino Número do pino de sinal do servo motor;
      * @param canal Canal de PWM do pino de sinal do servo motor.
      */
-    ServoMB(uint8_t pino, uint8_t canal) :
-        // Atribui os valores passados nos atributos
-        _canal(canal)
-    {
-        // Configura o canal que gera o sinal PWM
-        ledcSetup(_canal, ServoMBConstants::FREQUENCIA_DO_SINAL_PWM_DO_SERVO_MOTOR, ServoMBConstants::RESOLUCAO_DO_SINAL_PWM_DO_SERVO_MOTOR);
-
-        // Anexa o canal que gera o sinal PWM no pino de sinal do servo motor
-        ledcAttachPin(pino, _canal);
+    ServoMB(uint8_t pino, uint8_t canal) {
+        // Configura as variáveis de pino e canal do objeto e o timer do ESP
+        if (!setConfig(pino, canal)) {
+            ESP_LOGE("ServoMB", "Falha ao configurar o servo motor. Verifique os valores de pino e canal passados.");
+            return;
+        }
     }
 
     /**
@@ -77,21 +167,22 @@ class ServoMB {
         
         E escreve no canal o valor remapeado
         */
+    if (!configurado) { return; }
+
+        if (!hardwareIniciado) {
+            initCanal();
+        }
 
         // Atualiza o atributo da posição do servo motor com o valor da posição atual e limita o valor da posição no intervalo [0, 180]
-        _posicao = constrain(posicao, 0, 180);
+        _posicao = (posicao > 180) ? 180 : posicao;
 
         // Remapeia o valor da posição do servo motor para o intervalo do ciclo de trabalho do sinal PWM
-        uint32_t posicaoRemapeada = (uint32_t)map(
-            posicao,
-            0,
-            180,
-            ServoMBConstants::VALOR_MINIMO_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR,
-            ServoMBConstants::VALOR_MAXIMO_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR
-        );
+        uint32_t diferencaPWM = ServoMBConstants::VALOR_MAXIMO_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR - ServoMBConstants::VALOR_MINIMO_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR;
+        uint32_t posicaoRemapeada = ServoMBConstants::VALOR_MINIMO_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR + ((_posicao * diferencaPWM) / 180);
 
         // Escreve no canal o valor remapeado
-        ledcWrite(_canal, posicaoRemapeada);
+        ledc_set_duty(canalVelocidade, _canal, posicaoRemapeada);
+        ledc_update_duty(canalVelocidade, _canal);
     }
 
     /**
