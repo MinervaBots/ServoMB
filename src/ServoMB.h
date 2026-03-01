@@ -224,4 +224,12 @@ public:
      * @return O valor da posição atual do servo motor.
      */
     uint8_t getPosicao() const { return _posicao; }
+
+    /**
+     * @brief Método para iniciar o controle do servo motor, configurando o canal e o timer do ESP32.
+     * Esse método deve ser chamado somente após a inicialização do sistema operacional do ESP32, para garantir que a configuração do hardware seja feita corretamente.
+     * Não é necessário chamar esse método manualmente, pois ele é chamado automaticamente no método setPosicao() caso o hardware ainda não tenha sido iniciado,
+     * porém, isso fará com que o gasto computacional seja maior no momento de definir a posição do servo motor, já que a configuração do hardware é um processo mais pesado. 
+     */
+    void begin() { initCanal(); }
 };
