@@ -42,6 +42,9 @@ private:
     // Armazenará qual tipo de velocidade de canal será usada
     ledc_mode_t canalVelocidade;
 
+    // Atributo para guardar qual timer foi escolhido dinamicamente
+    ledc_timer_t timerSelecionado;
+
     // Atributo que armazena o valor da posição atual do servo motor
     uint8_t _posicao = 0;
 
@@ -110,25 +113,55 @@ private:
     void initCanal() {
         if (!configurado || hardwareIniciado) { return; }
 
-        ledc_timer_config_t ledc_timer = {
-            .speed_mode = canalVelocidade, // Escolhe o modo de velocidade de acordo com o canal de entrada na classe
-            .duty_resolution = static_cast<ledc_timer_bit_t>(ServoMBConstants::RESOLUCAO_DO_SINAL_PWM_DO_SERVO_MOTOR),
-            .timer_num = LEDC_TIMER_0,
-            .freq_hz = ServoMBConstants::FREQUENCIA_DO_SINAL_PWM_DO_SERVO_MOTOR,
-            .clk_cfg = LEDC_AUTO_CLK
-        };
+        bool timerAlocado = false;
+
+        // Inicia um loop para verificar os timers disponíveis e escolher um para configurar o canal do servo motor
+        for (uint8_t i = 0; i < LEDC_TIMER_MAX; i++) {
+            ledc_timer_t timerTeste = static_cast<ledc_timer_t>(i);
+
+            uint32_t freqAtual = ledc_get_freq(canalVelocidade, timerTeste); // Salva a frequência do timer de teste
+
+            // Se a frequência do timer de teste já for igual a que será usada para o servo motor, então esse timer será reutilizado
+            if (freqAtual == ServoMBConstants::FREQUENCIA_DO_SINAL_PWM_DO_SERVO_MOTOR) {
+                timerSelecionado = timerTeste;
+                timerAlocado = true;
+                break; // quebra o loop
+            }
+
+            // Se a frequência do timer de teste for 0, significa que ele está livre para ser configurado
+            else if (freqAtual == 0) {
+                timerSelecionado = timerTeste;
+
+                ledc_timer_config_t ledc_timer = {
+                    .speed_mode = canalVelocidade, // Escolhe o modo de velocidade de acordo com o canal de entrada na classe
+                    .duty_resolution = static_cast<ledc_timer_bit_t>(ServoMBConstants::RESOLUCAO_DO_SINAL_PWM_DO_SERVO_MOTOR),
+                    .timer_num = timerSelecionado,
+                    .freq_hz = ServoMBConstants::FREQUENCIA_DO_SINAL_PWM_DO_SERVO_MOTOR,
+                    .clk_cfg = LEDC_AUTO_CLK
+                };
+
+                ledc_timer_config(&ledc_timer);
+                timerAlocado = true;
+                break; // quebra o loop
+            }
+        }
+
+        // Se nenhum timer foi alocado, significa que todos os timers do LEDC estão sendo usados com outras frequências, e o controle do servo motor não pode ser iniciado
+        if (!timerAlocado) {
+            ESP_LOGE("ServoMB", "Nenhum timer livre! Todos os timers do LEDC estao sendo usados com outras frequencias.");
+            return; // Aborta a inicialização do hardware
+        }
 
         ledc_channel_config_t ledc_channel = {
             .gpio_num = _pino, // Pino de saída
             .speed_mode = canalVelocidade, // Escolhe o modo de velocidade de acordo com o canal de entrada na classe
             .channel = _canal, // Canal já remapeado
             .intr_type = LEDC_INTR_DISABLE, // desativa as interrupções
-            .timer_sel = LEDC_TIMER_0, // Timer já configurado
+            .timer_sel = timerSelecionado, // Timer já configurado
             .duty = 0, // Começa com o duty cicle em 0
             .hpoint = 0
         };
 
-        ledc_timer_config(&ledc_timer);
         ledc_channel_config(&ledc_channel);
 
         hardwareIniciado = true;
