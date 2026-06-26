@@ -4,6 +4,8 @@ Cabeçalho responsável pelo controle do servo motor.
 
 #pragma once
 
+#include <cstdint>
+
 #include "driver/ledc.h"
 #include "esp_log.h"
 #include "hal/gpio_types.h"
@@ -27,9 +29,9 @@ namespace ServoMBConstants {
     constexpr unsigned int VALOR_MAXIMO_RESOLUCAO_PWM_SERVO = (1 << RESOLUCAO_DO_SINAL_PWM_DO_SERVO_MOTOR) - 1;
 
     // Constantes com os valores do ciclo de trabalho do sinal PWM
-    constexpr unsigned short int VALOR_MINIMO_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR = (unsigned short int)(VALOR_MAXIMO_RESOLUCAO_PWM_SERVO * PORCENTAGEM_MINIMA_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR);
-    constexpr unsigned short int VALOR_MEDIO_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR  = (unsigned short int)(VALOR_MAXIMO_RESOLUCAO_PWM_SERVO * PORCENTAGEM_MEDIA_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR);
-    constexpr unsigned short int VALOR_MAXIMO_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR = (unsigned short int)(VALOR_MAXIMO_RESOLUCAO_PWM_SERVO * PORCENTAGEM_MAXIMA_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR);
+    constexpr unsigned short int VALOR_MINIMO_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR = static_cast<unsigned short int>(VALOR_MAXIMO_RESOLUCAO_PWM_SERVO * PORCENTAGEM_MINIMA_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR);
+    constexpr unsigned short int VALOR_MEDIO_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR  = static_cast<unsigned short int>(VALOR_MAXIMO_RESOLUCAO_PWM_SERVO * PORCENTAGEM_MEDIA_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR);
+    constexpr unsigned short int VALOR_MAXIMO_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR = static_cast<unsigned short int>(VALOR_MAXIMO_RESOLUCAO_PWM_SERVO * PORCENTAGEM_MAXIMA_DO_CICLO_DE_TRABALHO_DO_SERVO_MOTOR);
 }
 
 // Classe para controlar servo motores
