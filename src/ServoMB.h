@@ -6,6 +6,7 @@ Cabeçalho responsável pelo controle do servo motor.
 
 #include "driver/ledc.h"
 #include "esp_log.h"
+#include "hal/gpio_types.h"
 
 namespace ServoMBConstants {
     // Definição do valor da frequência do sinal PWM do servo motor
@@ -62,7 +63,7 @@ private:
      * @return true se a configuração for feita com sucesso, ou false caso haja algum erro na configuração.
      */
     bool setConfig(uint8_t pino, uint8_t canal) {
-        if (pino > 100) {
+        if (pino >= GPIO_NUM_MAX) {
             ESP_LOGE("ServoMB", "Pino invalido, o valor passado é muito alto (%d).", pino);
             return false;
         }
